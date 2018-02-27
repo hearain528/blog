@@ -1,0 +1,13 @@
+aiohttp==0.22.5
+aiomysql==0.0.8
+chardet==2.3.0
+Django==1.10.1
+HTMLParser==0.0.2
+image==1.5.4
+Jinja2==2.8
+markdown2==2.3.1
+MarkupSafe==0.23
+multidict==1.2.2
+Pillow==3.3.1
+pymongo==3.3.0
+PyMySQL==0.7.7

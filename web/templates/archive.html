@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}文章归档 - 蒙奇&bull;D&bull;Hearain {% endblock %}
+{% block beforehead %}
+{% endblock %}
+{% block content %}
+<div class="content">
+    <div class="wrapper">
+    <div class="light"><i></i></div>
+    <hr class="line-left">
+    <hr class="line-right">
+    <div class="main">
+      <h1 class="title">蒙奇&bull;D&bull;Hearain日志</h1>
+      {% for v in year %}
+      <div class="year">
+        <h2><a href="#">{{ v }}年<i></i></a></h2>
+        <div class="list">
+            <ul>
+              {% for k in year[v] %}
+              <li class="cls highlight">
+                <p class="date">{{ k }}</p>
+                <p class="intro"><a href="/blog/{{ year[v][k][0].id }}" target="_blank">{{ year[v][k][0].title }}</a></p>
+                {% if year[v][k]|length > 1 %}
+                <p class="version">&nbsp;</p>
+                <div class="more">
+                  {% for x in year[v][k] %}
+                    {% if not loop.first %}
+                      <p><a href="/blog/{{ x.id }}" target="_blank">{{ x.title }}</a></p>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script>
+	$(".main .year .list").each(function (e, target) {
+	    var $target=  $(target),
+	        $ul = $target.find("ul");
+	    $target.height($ul.outerHeight()), $ul.css("position", "absolute");
+	});
+	$(".main .year>h2>a").click(function (e) {
+	    e.preventDefault();
+	    $(this).parents(".year").toggleClass("close");
+	});
+</script>
+{% endblock %}

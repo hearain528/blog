@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}登录 {% endblock %}
+{% block beforehead %}
+<script src="//cdn.bootcss.com/crypto-js/3.1.2/components/core-min.js"></script>
+<script src="//cdn.bootcss.com/crypto-js/3.1.2/components/sha1-min.js"></script>
+<script>
+window.onload = function(){
+    function validateEmail(email) {
+        var re = /^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$/;
+        return re.test(email.toLowerCase());
+    }
+
+    $('#reg').click(function(){
+        var email = $("input[name='email']");
+        var yzcode = $("input[name='yzcode']");
+        var password = $("input[name='password']");
+        if (! validateEmail(email.val().trim().toLowerCase())) {
+            $("input[name='email']").focus();
+            $("input[name='email']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='email']").blur();
+            $("input[name='email']").css('borderColor','');
+        }
+        if (yzcode.val().length != 4) {
+            $("input[name='yzcode']").focus();
+            $("input[name='yzcode']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='yzcode']").blur();
+            $("input[name='yzcode']").css('borderColor','');
+        }
+        if (password.val().length < 6) {
+            $("input[name='password']").focus();
+            $("input[name='password']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='password']").blur();
+            $("input[name='password']").css('borderColor','');
+        }
+        $.ajax({
+            type: "post",
+            url: "/api/login",
+            data: {email:email.val().trim().toLowerCase(),passwd:CryptoJS.SHA1(email.val() + ':' + password.val()).toString(),yzcode:yzcode.val().trim()},
+            success: function (result) {
+                if(result.status == 0){
+                    $("input[name='email']").focus();
+                    $("input[name='email']").css('borderColor','red');
+                    $("#reg").attr('data-tooltip', result.message)
+                }else{
+                    location.href = '/admin';
+                }
+            }
+        });
+    });
+}
+
+</script>
+{% endblock %}
+{% block content %}
+    <div class="ui container" style="margin-top:20px;">
+        <h2 class="uptop">欢迎登录!</h2>
+        <div class="ui form" id="vm">
+            <div class="four wide field">
+                <input id="email" name="email" type="text" maxlength="50" placeholder="your-name@example.com">
+            </div>
+            <div class="four wide field">
+                <input id="password" name="password" type="password" maxlength="50" placeholder="输入口令">
+            </div>
+            <div class="fields">
+                <div class="two wide field">
+                    <input id="yzcode" name="yzcode" type="text" maxlength="50" placeholder="验证码">
+                </div>
+                <div class="two wide field">
+                    <img id="yz-img" src="/verify" width="130px" height="35px" onclick="this.src='/verify?random=' + Math.random();" />
+                </div>
+            </div>
+            <div class="ui button" type="submit" id="reg" data-inverted="" data-position="right center">登录</div>
+        </div>
+    </div>
+{% endblock %}

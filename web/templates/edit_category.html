@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}后台管理 {% endblock %}
+{% block beforehead %}
+
+{% endblock %}
+{% block content %}
+    <div class="ui container" style="margin-top:20px;">
+        <h2 class="uptop">添加新分类
+            <a style="margin-left:15px;" href="/logout">退出</a>
+        </h2>
+        <div class="ui form" id="vm">
+            <h4>分类标题：</h4>
+            <div class="field">
+                <input id="title" name="title" type="text" maxlength="300" placeholder="" value="{{ cate.title }}">
+            </div>
+            <input id="id" name="id" value="{{ cate.id }}" type="hidden" />
+            <div class="ui button" type="submit" id="publish" data-inverted="" data-position="right center">发表</div>
+        </div>
+
+    </div>
+
+<script type="text/javascript">
+
+    //发布文章
+    $('#publish').click(function(){
+        var title = $("input[name='title']");
+        var id = $("input[name='id']");
+        if (title.val() == "") {
+            title.focus();
+            title.css('borderColor','red');
+            return false;
+        }else{
+            title.blur();
+            title.css('borderColor','');
+        }
+        $.ajax({
+            type: "post",
+            url: "/api/category/edit",
+            data: {id:id.val(),title:title.val()},
+            success: function (result) {
+                if(result.status == 1){
+                    location.href = '/admin';
+                }else{
+                    $("#publish").attr('data-tooltip', result.message)
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

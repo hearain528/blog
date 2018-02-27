@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}后台管理 {% endblock %}
+{% block beforehead %}
+<link rel="stylesheet" href="/static/css/editor_md.css">
+<link rel="stylesheet" href="/static/editor.md/css/editormd.css">
+<link type="text/css" rel="stylesheet" href="/static/editor.md/scss/editormd.codemirror.scss">
+<script src="/static/editor.md/editormd.min.js"></script>
+
+{% endblock %}
+{% block content %}
+    <div class="ui container" style="margin-top:20px;">
+        <h2 class="uptop">添加文章
+            <a style="margin-left:15px;" href="/logout">退出</a>
+        </h2>
+        <div class="ui form" id="vm">
+            <h4>博文标题：</h4>
+            <div class="field">
+                <input id="title" name="title" type="text" maxlength="300" placeholder="">
+            </div>
+            <h4>博文分类：</h4>
+            <div class="inline field" id="category">
+            </div>
+            <h5>博文标签</h5>
+            <div class="field">
+                <input id="tag" name="tag" type="text" placeholder="标签以斜线分隔">
+            </div>
+            <h5>博客简介</h5>
+            <div class="field">
+                <input id="summary" name="summary" type="text" placeholder="">
+            </div>
+            <h4>博文内容：</h4>
+            <div id="article-editormd" class="editormd editormd-vertical editormd-theme-dark">
+            </div>
+            <div class="ui button" type="submit" id="publish" data-inverted="" data-position="right center">发表</div>
+        </div>
+
+    </div>
+
+<script type="text/javascript">
+    var mdEditor;
+
+    $(function() {
+        mdEditor = editormd("article-editormd", {
+            width: "100%",
+            height: 350,
+            path : '/static/editor.md/lib/',
+            theme : "dark",
+            previewTheme : "dark",
+            editorTheme : "pastel-on-dark",
+            //markdown : '',
+            codeFold : true,
+            //syncScrolling : false,
+            saveHTMLToTextarea : true,    // 保存 HTML 到 Textarea
+            searchReplace : true,
+            //watch : false,                // 关闭实时预览
+            htmlDecode : "style,script,iframe|on*",            // 开启 HTML 标签解析，为了安全性，默认不开启
+            //toolbar  : false,             //关闭工具栏
+            //previewCodeHighlight : false, // 关闭预览 HTML 的代码块高亮，默认开启
+            emoji : true,
+            taskList : true,
+            tocm          : true,         // Using [TOCM]
+            tex : true,                   // 开启科学公式TeX语言支持，默认关闭
+            flowChart : true,             // 开启流程图支持，默认关闭
+            sequenceDiagram : true,       // 开启时序/序列图支持，默认关闭,
+            //dialogLockScreen : false,   // 设置弹出层对话框不锁屏，全局通用，默认为true
+            //dialogShowMask : false,     // 设置弹出层对话框显示透明遮罩层，全局通用，默认为true
+            //dialogDraggable : false,    // 设置弹出层对话框不可拖动，全局通用，默认为true
+            //dialogMaskOpacity : 0.4,    // 设置透明遮罩层的透明度，全局通用，默认值为0.1
+            //dialogMaskBgColor : "#000", // 设置透明遮罩层的背景颜色，全局通用，默认为#fff
+            imageUpload : true,
+            imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+            imageUploadURL : "/upload",
+            onload : function() {
+                //this.setMarkdown("#PHP");  //设置内容
+                this.resize("100%", 450);
+            }
+        });
+    });
+
+    //ajax获取文章分类
+    $.ajax({
+            type: "post",
+            url: "/api/getCategory",
+            data: {page:null},
+            success: function (result) {
+                if(result.status == 1){
+                    for(var i in result.data){
+                        var html = '<div class="ui checkbox"><input name="category" type="checkbox" tabindex="';
+                        html += result.data[i].id +'" value="'+ result.data[i].id + '"><label>';
+                        html += result.data[i].title + '</label></div>';
+                        $('#category').append(html);
+                    }
+                }
+            }
+        });
+
+    //发布文章
+    $('#publish').click(function(){
+        var title = $("input[name='title']");
+        var category = $("input[name='category']");
+        var tag = $("input[name='tag']");
+        var summary = $("input[name='summary']");
+        if (title.val() == "") {
+            title.focus();
+            title.css('borderColor','red');
+            return false;
+        }else{
+            title.blur();
+            title.css('borderColor','');
+        }
+        if (tag.val() == "") {
+            tag.focus();
+            tag.css('borderColor','red');
+            return false;
+        }else{
+            tag.blur();
+            tag.css('borderColor','');
+        }
+        var selectCategory = [];
+        category.each(function(){
+            if(this.checked){
+                selectCategory.push($(this).val());
+            }
+        });
+        if(selectCategory.length == 0){
+            category.focus();
+            return false;
+        }
+         //testEditor.getMarkdown();       // 获取 Markdown 源码
+         //testEditor.getHTML();           // 获取 Textarea 保存的 HTML 源码
+         //testEditor.getPreviewedHTML();
+        var content = mdEditor.getMarkdown();
+        if(content == ""){
+            return false;
+        }
+        $.ajax({
+            type: "post",
+            url: "/api/article/add",
+            data: {title:title.val(), category:encodeURIComponent(selectCategory), tag: tag.val(), content: content, summary: summary.val()},
+            success: function (result) {
+                if(result.status == 1){
+                    location.href = '/admin';
+                }else{
+                    $("#publish").attr('data-tooltip', result.message)
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

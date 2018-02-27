@@ -1,0 +1,16 @@
+#article-editormd{
+    width: 100%;
+    height: 740px;
+}
+.editormd-preview{
+   position:inherit;
+}
+.editormd-preview p{
+    margin:0px;
+}
+.editormd .CodeMirror, .editormd-preview{
+    width:100%;
+}
+.editormd-dialog-container .ui.form input:not([type]), .ui.form input[type=text], .ui.form input[type=email], .ui.form input[type=search], .ui.form input[type=password], .ui.form input[type=date], .ui.form input[type=datetime-local], .ui.form input[type=tel], .ui.form input[type=time], .ui.form input[type=file], .ui.form input[type=url], .ui.form input[type=number]{
+    width:60%;
+}

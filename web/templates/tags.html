@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}蒙奇&bull;D&bull;Hearain {% endblock %}
+{% block beforehead %}
+<script type="text/javascript" src="/static/js/jqPaginator.min.js"></script>
+{% endblock %}
+{% block content %}
+    <div class="ui grid container" style="margin-top:20px;">
+        {% block middle %}
+        <div class="eleven wide column">
+            <div id="article_list">
+                <h2 class="uptop"><i class="fa fa-tags" aria-hidden="true"></i>标签分类</h2>
+                <article id="taglist" class="article-list-1 clearfix">
+                    {% for v in data %}
+                        <a class="ui {{ v.style }} tag label" href="/tag/{{ v.id }}" target="_blank">
+                            {{ v.title }}（{{ v.num }}）
+                        </a>
+                    {% endfor %}
+                </article>
+            </div>
+        </div>
+        {% endblock %}
+        {% block right %}
+            {{ super() }}
+        {% endblock %}
+    </div>
+
+<script type="text/javascript">
+</script>
+{% endblock %}

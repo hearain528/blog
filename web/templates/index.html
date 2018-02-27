@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}蒙奇&bull;D&bull;Hearain {% endblock %}
+{% block beforehead %}
+<script type="text/javascript" src="/static/js/jqPaginator.min.js"></script>
+{% endblock %}
+{% block content %}
+    <div class="ui grid container" style="margin-top:20px;">
+        {% block middle %}
+        <div class="eleven wide column">
+            <div id="article_list">
+                <article class="article-list-1 clearfix">
+                </article>
+            </div>
+            <div>
+                <ul id="page" class="pagination" style="padding-left:56%;">
+                </ul>
+            </div>
+        </div>
+        {% endblock %}
+        {% block right %}
+            {{ super() }}
+        {% endblock %}
+    </div>
+
+<script type="text/javascript">
+        //标签切换
+        $('.menu .item').tab();
+
+        //文章列表
+        var article_list = null;
+
+        //分页参数
+        var pageConfig = null;
+
+        pageselectCallback(1);
+
+        //分页回调函数
+        function pageselectCallback(current_page){
+            //获取列表
+            $.ajax({
+                type: "post",
+                url: "/api/blogList",
+                data: {page:current_page},
+                success: function (result) {
+                    if(result.status == 1){
+                        article_list = result.data.blogs;
+                        pageConfig = result.data.page;
+                        $("#article_list").empty();//清空上一页的数据
+                        for(var i = 0; i < article_list.length; i++){
+                            var html = '';
+                            html += '<article class="article-list-1 clearfix">';
+                            html += '<header class="clearfix">';
+                            html += '<h1 class="post-title"><a href="/blog/' + article_list[i].id + '" target="_blank">';
+                            html += article_list[i].title;
+                            html += '</a></h1>';
+                            html += '<div class="post-meta">';
+                            html += '<span class="meta-span"><i class="fa fa-calendar article-calendar"></i>';
+                            html += article_list[i].create_time;
+                            html += '</span>';
+                            html += '<span class="meta-span"><i class="fa fa-folder-open-o article-folder-open-o"></i>';
+                            if(article_list[i].category_title != null){
+                                for(var j = 0; j < article_list[i].category_id.length; j++){
+                                    html += '<a href="/category/'+ article_list[i].category_id[j] +'" rel="category tag">';
+                                    html += article_list[i].category_title[j];
+                                    html += '</a>';
+                                    if(j != article_list[i].category_id.length - 1){
+                                        html += ',';
+                                    }
+                                }
+                            }
+                            html += '</span>';
+                            html += '<span class="meta-span"><i class="comments icon article-comments"></i>';
+                            if(article_list[i].comment_num == 0){
+                                html += '<a href="/blog/' + article_list[i].id + '#respond" target="_blank">没有评论</a>';
+                            }else{
+                                html += '<a href="/blog/' + article_list[i].id + '#comments" target="_blank">'+ article_list[i].comment_num +'条评论</a>';
+                            }
+                            html += '</span><span class="meta-span"><i class="star icon article-view"></i>('+ article_list[i].view_count +')</span>';
+                            html += '<span class="meta-span hidden-xs"><i class="tags icon article-tags" aria-hidden="true"></i>';
+                            if(article_list[i].tag_id != null){
+                                for(var j = 0; j < article_list[i].tag_id.length; j++){
+                                    html += '<a href="/tag/'+ article_list[i].tag_id[j] +'" rel="tag">';
+                                    html += article_list[i].tag_title[j];
+                                    html += '</a>';
+                                    if(j != article_list[i].tag_id.length - 1){
+                                        html += ',';
+                                    }
+                                }
+                            }
+                            html += '</span></div></header>';
+                            html += '<div class="post-content clearfix">';
+                            html += '<p>' + article_list[i].summary + '</p></div>';
+                            html += '</article>';
+                            $("#article_list").append(html);
+                        }
+
+                        //分页数据
+                        $('#page').jqPaginator({
+                            totalCounts: pageConfig.item_count,
+                            pageSize: pageConfig.page_size,
+                            visiblePages: 8,
+                            currentPage: pageConfig.page_index,
+                            onPageChange: function (num, type) {
+                                if(pageConfig.page_index != num){
+                                    pageselectCallback(num);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+</script>
+{% endblock %}

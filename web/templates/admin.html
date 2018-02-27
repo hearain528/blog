@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% block title %}后台管理 {% endblock %}
+{% block beforehead %}
+<script type="text/javascript" src="/static/js/jqPaginator.min.js"></script>
+{% endblock %}
+{% block content %}
+    <div class="ui container" style="margin-top:20px;">
+        <h2 class="uptop">后台管理&nbsp;&nbsp;&nbsp;欢迎您，{{ name }}
+            <a href="/logout">退出</a>
+        </h2>
+        <a href="/add/article"><button class="ui blue button">发表新文章</button></a>
+        <a href="/add/category"><button class="ui blue button">添加新分类</button></a>
+        <div class="ui pointing secondary menu">
+            <a class="item active" data-tab="first">文章管理</a>
+            <a class="item" data-tab="second">分类管理</a>
+            <a class="item" data-tab="third">评论管理</a>
+        </div>
+        <!--文章管理-->
+        <div id="article_list" class="ui tab segment active" data-tab="first">
+            <table class="ui black table">
+                <thead><tr>
+                    <th class="wide seven">标题</th>
+                    <th class="wide two">创建时间</th>
+                    <th class="wide two">操作</th>
+                </tr></thead>
+                <tbody>
+                </tbody>
+            </table>
+            <ul id="article_list_page" class="pagination">
+            </ul>
+        </div>
+        <!--分类管理-->
+        <div id="category_list" class="ui tab segment" data-tab="second">
+            <table class="ui black table">
+                <thead><tr>
+                    <th class="wide seven">标题</th>
+                    <th class="wide two">创建时间</th>
+                    <th class="wide two">操作</th>
+                </tr></thead>
+                <tbody>
+                </tbody>
+            </table>
+            <ul id="category_list_page" class="pagination">
+            </ul>
+        </div>
+        <!--评论管理-->
+        <div id="comment_list" class="ui tab segment" data-tab="third">
+            <table class="ui black table">
+                <thead><tr>
+                    <th class="wide seven">标题</th>
+                    <th class="wide two">创建时间</th>
+                    <th class="wide two">操作</th>
+                </tr></thead>
+                <tbody>
+                </tbody>
+            </table>
+            <ul id="comment_list_page" class="pagination">
+            </ul>
+        </div>
+    </div>
+    <script type="text/javascript">
+        //初始化文章管理
+        initTab('article_list', 'article_list_page', '/api/blogList');
+
+        //标签切换
+        $('.menu .item').tab({
+            cache: false,
+            apiSettings: {
+              loadingDuration : 300,
+              mockResponse    : function(settings) {
+                if(settings.urlData.tab == "first"){
+                    initTab('article_list', 'article_list_page', '/api/blogList');
+                }else if(settings.urlData.tab == "second"){
+                    initTab('category_list', 'category_list_page', '/api/getCategory');
+                }else if(settings.urlData.tab == "third"){
+                    initTab('comment_list', 'comment_list_page', '/api/commentList');
+                }
+              }
+            },
+            context : 'parent',
+            auto    : true,
+            path    : '/'
+        });
+
+
+
+        //文章列表
+        var article_list = null;
+        //分页参数
+        var pageConfig = null;
+
+        //初始化分类管理
+        function initTab(id, pageId, url){
+            pageselectCallback(1);
+
+            //分页回调函数
+            function pageselectCallback(current_page){
+                //获取列表
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {page:current_page},
+                    success: function (result) {
+                        if(result.status == 1){
+                            article_list = result.data.blogs;
+                            pageConfig = result.data.page;
+                            $("#" + id).find("tbody").empty();//清空上一页的数据
+                            for(var i = 0; i < article_list.length; i++){
+                                if(id == "article_list"){
+                                    var html = '<tr><td><a href="/blog/'+ article_list[i].id +'" target="blank">' + article_list[i].title +
+                                            '</a></td><td>'+ article_list[i].create_time
+                                             +'</td><td><a href="/edit/article/'
+                                             + article_list[i].id
+                                             +'" class="ui blue label">修改</a><a id="delete" onclick = "delete_article('
+                                             + article_list[i].id
+                                             +')" class="ui red label">删除</a></td></tr>';
+                                }else if(id == "category_list"){
+                                    var html = '<tr><td><a href="/category/'+ article_list[i].id +'" target="blank">' + article_list[i].title +
+                                            '</a></td><td>'+ article_list[i].create_time
+                                             +'</td><td><a href="/edit/category/'
+                                             + article_list[i].id
+                                             +'" class="ui blue label">修改</a><a id="delete" onclick = "delete_category('
+                                             + article_list[i].id
+                                             +')" class="ui red label">删除</a></td></tr>';
+                                }else if(id == "comment_list"){
+                                    var html = '<tr><td><a href="/blog/'+ article_list[i].blog_id +'#comments" target="blank">' + article_list[i].content +
+                                            '</a>【' + article_list[i].from_user_name + '】to【' + article_list[i].to_user_name + '】' + '</td><td>'+ article_list[i].create_time
+                                             +'</td><td><a id="delete" onclick = "delete_comment('
+                                             + article_list[i].id
+                                             +')" class="ui red label">删除</a></td></tr>';
+                                }
+                                $("#" + id).find("tbody").append(html);
+                            }
+
+                            //分页数据
+                            $('#' + pageId).jqPaginator({
+                                totalCounts: pageConfig.item_count,
+                                pageSize: pageConfig.page_size,
+                                visiblePages: 8,
+                                currentPage: pageConfig.page_index,
+                                onPageChange: function (num, type) {
+                                    if(pageConfig.page_index != num){
+                                        pageselectCallback(num);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+
+
+        //删除文章
+        function delete_article(article_id){
+            $.ajax({
+                type: "post",
+                url: "/api/article/delete",
+                data: {article_id:article_id},
+                success: function (result) {
+                    if(result.status == 1){
+                        sweetAlert("Success", result.message, "success");
+                    }else{
+                        sweetAlert("Failed", result.message, "error");
+                    }
+                    initTab('article_list', 'article_list_page', '/api/blogList');
+                }
+            });
+        }
+
+        //删除分类
+        function delete_category(cate_id){
+            $.ajax({
+                type: "post",
+                url: "/api/category/delete",
+                data: {category_id:cate_id},
+                success: function (result) {
+                    if(result.status == 1){
+                        sweetAlert("Success", result.message, "success");
+                    }else{
+                        sweetAlert("Failed", result.message, "error");
+                    }
+                    initTab('category_list', 'category_list_page', '/api/getCategory');
+                }
+            });
+        }
+
+        //删除评论
+        function delete_comment(comment_id){
+            $.ajax({
+                type: "post",
+                url: "/api/comments/delete",
+                data: {comment_id:comment_id},
+                success: function (result) {
+                    if(result.status == 1){
+                        sweetAlert("Success", result.message, "success");
+                    }else{
+                        sweetAlert("Failed", result.message, "error");
+                    }
+                    initTab('comment_list', 'comment_list_page', '/api/commentList');
+                }
+            });
+        }
+    </script>
+{% endblock %}

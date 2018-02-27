@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}注册 {% endblock %}
+{% block beforehead %}
+<script src="//cdn.bootcss.com/crypto-js/3.1.2/components/core-min.js"></script>
+<script src="//cdn.bootcss.com/crypto-js/3.1.2/components/sha1-min.js"></script>
+<script>
+window.onload = function(){
+    function validateEmail(email) {
+        var re = /^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$/;
+        return re.test(email.toLowerCase());
+    }
+
+    $('#reg').click(function(){
+        var name = $("input[name='name']");
+        var email = $("input[name='email']");
+        var password1 = $("input[name='password1']");
+        var password2 = $("input[name='password2']");
+        if (! name.val().trim()) {
+            $("input[name='name']").focus();
+            $("input[name='name']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='name']").blur();
+            $("input[name='name']").css('borderColor','');
+        }
+        if (! validateEmail(email.val().trim().toLowerCase())) {
+            $("input[name='email']").focus();
+            $("input[name='email']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='email']").blur();
+            $("input[name='email']").css('borderColor','');
+        }
+        if (password1.val().length < 6) {
+            $("input[name='password1']").focus();
+            $("input[name='password1']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='password1']").blur();
+            $("input[name='password1']").css('borderColor','');
+        }
+        if (password1.val() !== password2.val()) {
+            $("input[name='password2']").focus();
+            $("input[name='password2']").css('borderColor','red');
+            return false;
+        }else{
+            $("input[name='password2']").blur();
+            $("input[name='password2']").css('borderColor','');
+        }
+
+        $.ajax({
+            type: "post",
+            url: "/api/register",
+            data: {name:name.val().trim(),email:email.val().trim().toLowerCase(),passwd:CryptoJS.SHA1(email.val().trim() + ':' + password1.val().trim()).toString()},
+            success: function (result) {
+                if(result.status == 0){
+                    $("input[name='email']").focus();
+                    $("input[name='email']").css('borderColor','red');
+                    $("#reg").attr('data-tooltip', result.message)
+                }else{
+                    location.href = '/admin';
+                }
+            }
+        });
+    });
+}
+
+</script>
+{% endblock %}
+{% block content %}
+    <div class="ui container" style="margin-left:20px;">
+        <h2 class="uptop">欢迎注册!</h2>
+        <div class="ui form" id="vm">
+            <div class="field">
+                <label>名字:</label>
+                <input id="name" name="name" type="text" maxlength="50" placeholder="名字">
+            </div>
+            <div class="field">
+                <label>电子邮件:</label>
+                <input id="email" name="email" type="text" maxlength="50" placeholder="your-name@example.com">
+            </div>
+            <div class="field">
+                <label>输入口令:</label>
+                <input id="password1" name="password1" type="password" maxlength="50" placeholder="输入口令">
+            </div>
+            <div class="field">
+                <label>重复口令:</label>
+                <input id="password2" name="password2" type="password" maxlength="50" placeholder="重复口令">
+            </div>
+            <div class="ui button" type="submit" id="reg" data-inverted="" data-position="right center">注册</div>
+        </div>
+    </div>
+{% endblock %}

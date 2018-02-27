@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% block title %} {{ blog.title }}-Hearain {% endblock %}
+{% block beforehead %}
+<link rel="stylesheet" href="/static/editor.md/css/editormd.preview.min.css" />
+<link type="text/css" rel="stylesheet" href="/static/css/katex.min.css" />
+<link type="text/css" rel="stylesheet" href="/static/editor.md/lib/codemirror/codemirror.min.css" />
+<link type="text/css" rel="stylesheet" href="/static/editor.md/css/editormd.css" />
+<link rel="stylesheet" href="/static/highlight/styles/monokai.css" />
+<link rel="stylesheet" href="/static/css/editor_md.css" />
+<script type="text/javascript" src="/static/highlight/highlight.pack.js"></script>
+<script type="text/javascript" src="/static/editor.md/lib/codemirror/codemirror.min.js"></script>
+<!--<script type="text/javascript" src="/static/js/katex.min.js"></script>-->
+<script src="/static/editor.md/lib/marked.min.js"></script>
+<script src="/static/editor.md/lib/prettify.min.js"></script>
+<script src="/static/editor.md/lib/raphael.min.js"></script>
+<script src="/static/editor.md/lib/underscore.min.js"></script>
+<script src="/static/editor.md/lib/sequence-diagram.min.js"></script>
+<script src="/static/editor.md/lib/flowchart.min.js"></script>
+<script src="/static/editor.md/lib/jquery.flowchart.min.js"></script>
+<script src="/static/editor.md/editormd.js"></script>
+{% endblock %}
+{% block content %}
+    <div class="ui container" style="margin-top:20px;">
+      <h1 class="view-title">{{ blog.title }}</h1>
+      <div class="view-meta">
+          <span>作者:{{ blog.author }} </span>
+          <span>分类:
+              {% for k in blog.category_id %}
+              <a href="/category/{{ k }}" rel="category tag">{{ blog.category_title[loop.index0] }}</a>
+                {% if not loop.last %},{% endif %}
+              {% endfor %}
+          </span>
+          <span>发布时间: {{ blog.create_time }}</span>
+          <span>标签：
+             {% for k in blog.tag_id %}
+              <a href="/tag/{{ k }}" rel="category tag">{{ blog.tag_title[loop.index0] }}</a>
+                {% if not loop.last %},{% endif %}
+              {% endfor %}
+          </span>
+      </div>
+    </div>
+    <div class="ui container">
+        <div class="editormd-preview editormd-preview-theme-dark" style="display: block;">
+            <div id="editormd-view" class="content editormd-preview-container">
+              <textarea id="append-view" style="display:none;">{{ blog.content }}</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="ui container">
+        <section class="support-author">
+            <p>如果觉得我的文章对您有用，请随意打赏。您的支持将鼓励我继续创作！</p>
+            <button type="button" class="ui orange button" onclick="showModal()"><i class="fa fa-cny" aria-hidden="true"></i> 打赏支持</button>
+        </section>
+
+        <!-- 弹出框 modal -->
+        <div class="ui modal fade" id="myModal" tabindex="-1" style="display: none;margin-top:200px;">
+            <div class="header">
+                <i class="fa fa-cny" aria-hidden="true"></i> 打赏支持
+            </div>
+            <div class="modal-body text-center">
+                <p style="padding:32px;display:block;">
+                    <img border="0" src="/static/imgs/zhifubao-pay.jpg" alt="hearain支付宝" width="180" height="180" style="margin: 0 8%;">
+                    <img border="0" src="/static/imgs/weixin-pay.jpg" alt="hearain微信钱包" width="180" height="180" style="margin: 0 8%;">
+                </p>
+            </div>
+        </div>
+        <!-- 弹出框 modal -->
+    </div>
+    <div class="ui container">
+        <!-- 评论start -->
+        <section id="comments">
+            {% if blog.comments %}
+            <div class="comment-head clearfix">
+                  <div class="left">{{ blog.comment_num }}条评论</div>
+                  <div class="right">
+                      <a href="#respond"><i class="fa fa-pencil"></i> 添加新评论</a>
+                  </div>
+            </div>
+            <ul>
+                {% for k in blog.comments %}
+                <li id="comment-li-{{ k.from_user_id }}" class="comment_li">
+                    <div id="comment-{{ k.from_user_id }}">
+                        <div class="comment_top clearfix">
+                            <div class="comment_avatar"><img alt="" src="{{ k.from_user_logo }}" class="avatar avatar-40 photo" height="40" width="40"></div>
+                            <div class="left">
+                                <p class="comment_author">{{ k.from_user_name }}</p>
+                                <p class="comment_time">{{ k.create_time }}</p>
+                            </div>
+                            <div class="right">
+                                <a rel="nofollow" class="comment-reply-link" href="javascript:;" onclick="moveCommentForm( '#comment-{{ k.from_user_id }}', '{{ k.from_user_name }}', '{{ k.from_user_id }}', '{{ k.id }}')">回复TA</a>
+                            </div>
+                        </div>
+                        <div class="comment_text"><p>{{ k.content }}</p>
+                        </div>
+                    </div>
+                    {% if k.children != 0 %}
+                    <ol class="children">
+                        {% for t in k.child %}
+                        <li id="comment-li-{{ t.from_user_id }}" class="comment_li">
+                            <div id="comment-{{ t.from_user_id }}">
+                                <div class="comment_top clearfix">
+                                    <div class="comment_avatar"><img alt="" src="{{ t.from_user_logo }}" class="avatar avatar-40 photo" height="40" width="40"></div>
+                                    <div class="left">
+                                        <p class="comment_author">{{ t.from_user_name }}@{{ t.to_user_name }}</p>
+                                        <p class="comment_time">{{ t.create_time }}</p>
+                                    </div>
+                                    <div class="right">
+                                        <a rel="nofollow" class="comment-reply-link" href="javascript:;" onclick="moveCommentForm( '#comment-li-{{ t.from_user_id }}', '{{ t.from_user_name }}', '{{ t.from_user_id }}', '{{ t.parent }}')">回复TA</a>
+                                    </div>
+                                </div>
+                                <div class="comment_text"><p>{{ t.content }}</p>
+                                </div>
+                            </div>
+                        </li><!-- #comment-## -->
+                        {% endfor %}
+                    </ol>
+                    {% endif %}
+                </li>
+                {% endfor %}
+
+            </ul>
+            {% endif %}
+            <!--回复 #respond-->
+            <div id="respond" class="comment-respond">
+                <h4 id="reply-title" class="comment-reply-title">发表评论
+                    <small>
+                    <a rel="nofollow" id="cancel-comment-reply-link" href="javascript:;" onclick="removeCommentForm()" style="display:none;">取消回复</a>
+                    </small>
+                </h4>
+                <div class="ui form comment-form">
+                    <p class="comment-notes">
+                        <span id="email-notes">电子邮件地址不会被公开。</span>
+                        必填项已用
+                        <span class="required">*</span>
+                        标注
+                    </p>
+                    <div class="field comment form-group has-feedback">
+                        <textarea placeholder=" " name="comment" rows="5" aria-required="true" required=""></textarea>
+                    </div>
+                    <div class="comment-form-author form-group has-feedback">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <input class="form-control" placeholder="昵称" id="author" name="from_user_name" type="text" value="" size="30" style="border-radius:0px 5px 5px 0px;">
+                            <span class="form-control-feedback required">*</span>
+                        </div>
+                    </div>
+                    <div class="comment-form-email form-group has-feedback">
+                        <div class="input-group">
+                            <div class="input-group-addon">
+                                <i class="fa fa-envelope-o"></i>
+                            </div>
+                            <input class="form-control" placeholder="邮箱" id="email" name="from_user_email" type="text" value="" size="30" style="border-radius:0px 5px 5px 0px;">
+                            <span class="form-control-feedback required">*</span>
+                        </div>
+                    </div>
+                    <p class="form-submit">
+                        <input name="submit" type="submit" id="submit" class="ui primary button" value="发表评论" />
+                        <input type="hidden" name="to_user_id" value="" id="comment_post_ID" />
+                        <input type="hidden" name="to_user_name" value="" id="comment_post_name" />
+                        <input type="hidden" name="blog_id" value="{{ blog.id }}" id="blog_id" />
+                        <input type="hidden" name="comment_parent" id="comment_parent" value="0" />
+                    </p>
+                </div>
+            </div>
+            <!--回复 end-->
+        </section>
+    </div>
+
+
+
+    <script type="text/javascript">
+        $(function() {
+            var EditormdView;
+
+            EditormdView = editormd.markdownToHTML("editormd-view", {
+                    htmlDecode      : "style,script,iframe",  // you can filter tags decode
+                    emoji           : true,
+                    taskList        : true,
+                    tex             : true,  // 默认不解析
+                    flowChart       : true,  // 默认不解析
+                    sequenceDiagram : true,  // 默认不解析
+                    previewCodeHighlight: true
+                });
+        });
+
+        //初始化hightlight插件
+        hljs.initHighlightingOnLoad();
+
+        function showModal(){
+            $('#myModal').modal('show');
+        }
+
+        //检查邮箱
+        function validateEmail(email) {
+            var re = /^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$/;
+            return re.test(email.toLowerCase());
+        }
+
+
+        //描述：移动表单至相应评论下面
+        function moveCommentForm(element, username, user_id, parent){
+            console.log(username + "===" + user_id + "=====" + parent);
+            $("#cancel-comment-reply-link").show();
+            $(element).after($('#respond'));
+            $("input[name='to_user_name']").attr("value", username);
+            $("input[name='to_user_id']").attr("value", user_id);
+            $("input[name='comment_parent']").attr("value", parent);
+            <!--}else{-->
+                <!--$("input[name='to_user_name']").attr("value", '');-->
+                <!--$("input[name='to_user_id']").attr("value", '');-->
+                <!--$("input[name='comment_parent']").attr("value", 0);-->
+            <!--}-->
+        }
+
+        //描述：取消回复
+        function removeCommentForm(){
+            $("#comments").after($('#respond'));
+            $("#cancel-comment-reply-link").hide();
+            $("input[name='to_user_name']").attr("value", '');
+            $("input[name='to_user_id']").attr("value", '');
+            $("input[name='comment_parent']").attr("value", 0);
+        }
+
+        $('#submit').click(function(){
+            var from_user_name = $("input[name='from_user_name']");
+            var from_user_email = $("input[name='from_user_email']");
+            var comment = $("textarea[name='comment']");
+            var to_user_id = $("input[name='to_user_id']");
+            var to_user_name = $("input[name='to_user_name']");
+            var blog_id = $("input[name='blog_id']");
+            var comment_parent = $("input[name='comment_parent']");
+
+            if (! validateEmail(from_user_email.val().trim())) {
+                from_user_email.focus();
+                from_user_email.css('borderColor','red');
+                return false;
+            }else{
+                from_user_email.blur();
+                from_user_email.css('borderColor','');
+            }
+            if (from_user_name.val().length == '') {
+                from_user_name.focus();
+                from_user_name.css('borderColor','red');
+                return false;
+            }else{
+                from_user_name.blur();
+                from_user_name.css('borderColor','');
+            }
+
+            $.ajax({
+                type: "post",
+                url: "/api/comment/add",
+                data: {comment:comment.val(), from_user_name:from_user_name.val(),
+                        from_user_email: from_user_email.val(), to_user_id: to_user_id.val(),
+                        to_user_name: to_user_name.val(),
+                        comment_parent: comment_parent.val(), blog_id: blog_id.val()},
+                success: function (result) {
+                     location.href = '/blog/' + blog_id.val();
+                }
+            });
+        });
+    </script>
+{% endblock %}
