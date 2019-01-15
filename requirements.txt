@@ -1,7 +1,7 @@
 aiohttp==0.22.5
 aiomysql==0.0.8
 chardet==2.3.0
-Django==1.10.1
+Django==1.11.18
 HTMLParser==0.0.2
 image==1.5.4
 Jinja2==2.8
